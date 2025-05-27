@@ -79,12 +79,9 @@ def user_exists(email, url):
             'url': url,
         }
     )
-    if ('Item' in response):
-        return True
-    else:
-        return False
+    return 'Item' in response
 
-def insert_item_into_history_table(email, url, depart_prices, return_prices):
+def insert_item_into_history_table(email, url, depart_prices, return_prices, new_user):
     user_id = user_table.get_item(Key={'email': email,'url': url})['Item']['user_id']
 
     history_table.put_item(
@@ -95,7 +92,8 @@ def insert_item_into_history_table(email, url, depart_prices, return_prices):
             'prices': {
                 'depart_prices': depart_prices,
                 'return_prices': return_prices
-                }
+                },
+            'new_user': new_user
             }
     )
 
@@ -114,8 +112,10 @@ def insert_item_into_record_table(email, url, depart_prices, return_prices):
     )
 
 if (user_exists(email, skyscanner_url)):
-    insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices)
+    new_user = 'N'
+    insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
 else:
+    new_user = 'Y'
     #if new user, insert into user table + insert record into history table + insert into record_prices as it is the first snapshot
     user_table.put_item(
         Item={
@@ -125,6 +125,6 @@ else:
             }
     )
 
-    insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices)
+    insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
 
     insert_item_into_record_table(email, skyscanner_url, depart_prices, return_prices)
