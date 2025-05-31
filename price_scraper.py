@@ -7,8 +7,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
+print(datetime.now())
 load_dotenv()
-skyscanner_url = 'https://www.skyscanner.com.au/transport/flights/mela/dps/?adults=1&adultsv2=1&cabinclass=economy&children=0&childrenv2=&destinationentityid=27540795&inboundaltsenabled=false&infants=0&iym=2508&originentityid=27544894&outboundaltsenabled=false&oym=2508&preferdirects=false&ref=home&rtn=1&selectedoday=01&selectediday=01'
+skyscanner_url = os.getenv('url')
 email = os.getenv('email')
 
 firefox_options = Options()
@@ -19,6 +20,7 @@ driver = webdriver.Firefox(options=firefox_options)
 driver.get(skyscanner_url)
 html_source = driver.page_source
 soup = BeautifulSoup(html_source, 'html.parser')
+print("page obtained")
 
 depart_month_div = soup.find('div', class_='outbound-calendar')
 return_month_div = soup.find('div', class_='inbound-calendar')
@@ -63,7 +65,6 @@ for button in return_month_div.find_all('button', class_='month-view-calendar__c
 
 print(depart_prices)
 print(return_prices)
-
 driver.quit()
 
 #DB
@@ -80,13 +81,15 @@ def user_exists(email):
     )
     return 'Item' in response
 
-def insert_item_into_history_table(email, depart_prices, return_prices, new_user):
+def insert_item_into_history_table(email, url, depart_prices, return_prices, new_user):
     user_id = user_table.get_item(Key={'email': email})['Item']['user_id']
+    url = user_table.get_item(Key={'email': email})['Item']['url']
 
     history_table.put_item(
         Item={
             'id': str(uuid.uuid4()),
             'user_id': user_id,
+            url: url,
             'date_scraped': datetime.today().strftime('%d-%m-%Y'),
             'prices': {
                 'depart_prices': depart_prices,
@@ -112,9 +115,10 @@ def insert_item_into_record_table(email, url, depart_prices, return_prices):
             }
     )
 
-if (user_exists(email, skyscanner_url)):
+if (user_exists(email)):
     new_user = 'N'
     insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
+    print("successfully inserted existing user")
 else:
     new_user = 'Y'
     #if new user, insert into user table + insert record into history table + insert into record_prices as it is the first snapshot
@@ -129,3 +133,5 @@ else:
     insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
 
     insert_item_into_record_table(email, skyscanner_url, depart_prices, return_prices)
+
+    print("successfully inserted new user")
