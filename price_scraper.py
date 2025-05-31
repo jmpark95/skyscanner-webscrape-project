@@ -72,17 +72,16 @@ user_table = dynamodb.Table('Users')
 history_table = dynamodb.Table('History')
 record_prices = dynamodb.Table('Record_Prices')
 
-def user_exists(email, url):
+def user_exists(email):
     response = user_table.get_item(
         Key={
-            'email': email,
-            'url': url,
+            'email': email
         }
     )
     return 'Item' in response
 
-def insert_item_into_history_table(email, url, depart_prices, return_prices, new_user):
-    user_id = user_table.get_item(Key={'email': email,'url': url})['Item']['user_id']
+def insert_item_into_history_table(email, depart_prices, return_prices, new_user):
+    user_id = user_table.get_item(Key={'email': email})['Item']['user_id']
 
     history_table.put_item(
         Item={
@@ -98,11 +97,13 @@ def insert_item_into_history_table(email, url, depart_prices, return_prices, new
     )
 
 def insert_item_into_record_table(email, url, depart_prices, return_prices):
-    user_id = user_table.get_item(Key={'email': email,'url': url})['Item']['user_id']
+    user_id = user_table.get_item(Key={'email': email})['Item']['user_id']
 
     record_prices.put_item(
         Item={
             'user_id': user_id,
+            'email': email,
+            'url': url,
             'date_scraped': datetime.today().strftime('%d-%m-%Y'),
             'prices': {
                 'depart_prices': depart_prices,
