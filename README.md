@@ -1,7 +1,8 @@
-# skyscanner-webscrape-price-alert-project
+# Skyscanner price alert system built on AWS
 
 I use skyscanner. I think it's a great travel search engine.
-But one downside I realised was that in order to get price alerts, you had to pick EXACT dates. Eg. if I were planning to visit Bali in December, I'd have to subscribe to price alerts for X<sup>th</sup> December departure and Y<sup>st</sup> December return. However, I often found myself in situations where I didn't need to travel on exact dates but rough dates(eg. mid December and return late December) and my priority would be getting the cheapest flights.
+
+But one downside I realised was that in order to get price alerts, you had to pick EXACT dates. Eg. if I was planning on visiting Bali in December, I'd have to subscribe to price alerts for X<sup>th</sup> December departure and Y<sup>st</sup> December return. However, I often found myself in situations where I didn't need to travel on exact dates but rough dates(eg. mid December and return late December) and my priority would be getting the cheapest flights.
 
 As a result, what I would do is search for the whole month
 ![alt text](image.png)
