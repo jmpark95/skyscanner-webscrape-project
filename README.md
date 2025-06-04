@@ -2,9 +2,10 @@
 
 I use skyscanner. I think it's a great travel search engine.
 
-But one downside I realised was that in order to get price alerts, you had to pick EXACT dates. Eg. if I was planning on visiting Bali in December, I'd have to subscribe to price alerts for X<sup>th</sup> December departure and Y<sup>st</sup> December return. However, I often found myself in situations where I didn't need to travel on exact dates but rough dates(eg. mid December and return late December) and my priority would be getting the cheapest flights.
+But one downside I realised was that in order to get price alerts, you have to pick EXACT dates. Eg. if I was planning on visiting Bali in December, I'd have to subscribe to price alerts for X<sup>th</sup> December departure and Y<sup>st</sup> December return. However, I often found myself in situations where I didn't need to travel on exact dates but rough dates(eg. mid December and return late December) and my priority would be getting the cheapest flights.
 
 As a result, what I would do is search for the whole month
+
 ![alt text](screenshots/image.png)
 and refresh this page on a regular basis.
 
@@ -22,3 +23,13 @@ This automated system runs on AWS with these steps:
 -  I get notified via SES and decide whether I buy the ticket or keep waiting.
 
 ![alt text](screenshots/image-1.png)
+
+# Example email screenshots:
+
+1. The very first snapshot. Prices will be compared with this snapshot henceforth. (Prices set to $99999 for dates that don't have a price yet)
+
+![alt text](screenshots/email-1.png)
+
+![alt text](screenshots/email-2.png)
+
+2. Price drop detected and notified via email
