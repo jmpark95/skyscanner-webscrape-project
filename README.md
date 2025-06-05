@@ -33,3 +33,7 @@ This automated system runs on AWS with these steps:
 ![alt text](screenshots/email-2.png)
 
 2. Price drop detected and notified via email
+
+![alt text](screenshots/email-3.png)
+
+(Note: for longer international flights, the price drops are usually more substantial than these $3 decreases :D)
