@@ -7,11 +7,13 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-print(datetime.now())
+dynamodb = boto3.resource('dynamodb')
+user_table = dynamodb.Table('Users')
+history_table = dynamodb.Table('History')
+record_prices = dynamodb.Table('Record_Prices')
 load_dotenv()
 skyscanner_url = os.getenv('url')
 email = os.getenv('email')
-
 firefox_options = Options()
 firefox_options.add_argument("--enable-javascript")
 firefox_options.add_argument("--headless")
@@ -44,22 +46,6 @@ def extract_prices_from_calendar(calendar_div):
         prices[date] = price
 
     return prices
-
-depart_month_div = soup.find('div', class_='outbound-calendar')
-return_month_div = soup.find('div', class_='inbound-calendar')
-
-depart_prices = extract_prices_from_calendar(depart_month_div)
-return_prices = extract_prices_from_calendar(return_month_div)
-
-print(depart_prices)
-print(return_prices)
-driver.quit()
-
-#DB
-dynamodb = boto3.resource('dynamodb')
-user_table = dynamodb.Table('Users')
-history_table = dynamodb.Table('History')
-record_prices = dynamodb.Table('Record_Prices')
 
 def user_exists(email):
     response = user_table.get_item(
@@ -103,23 +89,37 @@ def insert_item_into_record_table(email, url, depart_prices, return_prices):
             }
     )
 
-if (user_exists(email)):
-    new_user = 'N'
-    insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
-    print("successfully inserted existing user")
-else:
-    new_user = 'Y'
-    #if new user, insert into user table + insert record into history table + insert into record_prices as it is the first snapshot
-    user_table.put_item(
-        Item={
-            'email': email,
-            'url': skyscanner_url,
-            'user_id': str(uuid.uuid4())
-            }
-    )
+def main():
+    print(datetime.now())
 
-    insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
+    depart_month_div = soup.find('div', class_='outbound-calendar')
+    return_month_div = soup.find('div', class_='inbound-calendar')
 
-    insert_item_into_record_table(email, skyscanner_url, depart_prices, return_prices)
+    depart_prices = extract_prices_from_calendar(depart_month_div)
+    return_prices = extract_prices_from_calendar(return_month_div)
+    print(depart_prices)
+    print(return_prices)
 
-    print("successfully inserted new user")
+    driver.quit()
+
+    if (user_exists(email)):
+        new_user = 'N'
+        insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
+        print("successfully inserted existing user")
+    else:
+        new_user = 'Y'
+        #if new user, insert into user table + insert record into history table + insert into record_prices as it is the first snapshot
+        user_table.put_item(
+            Item={
+                'email': email,
+                'url': skyscanner_url,
+                'user_id': str(uuid.uuid4())
+                }
+        )
+
+        insert_item_into_history_table(email, skyscanner_url, depart_prices, return_prices, new_user)
+        insert_item_into_record_table(email, skyscanner_url, depart_prices, return_prices)
+        print("successfully inserted new user")
+
+if __name__ == "__main__":
+    main()
