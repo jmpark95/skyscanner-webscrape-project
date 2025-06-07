@@ -20,48 +20,36 @@ driver = webdriver.Firefox(options=firefox_options)
 driver.get(skyscanner_url)
 html_source = driver.page_source
 soup = BeautifulSoup(html_source, 'html.parser')
-print("page obtained")
+
+def extract_prices_from_calendar(calendar_div):
+    prices = {}
+
+    for button in calendar_div.find_all('button', class_='month-view-calendar__cell'):
+    # Skip previous month dates. Eg. I looked up August, but the UI was also giving July 30 31 dates
+        if 'month-view-calendar__cell--blocked' in button.get('class', []):
+            continue
+
+        date = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--label-1__MWI4N date').get_text(strip=True)
+        price_in_green_text = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--label-3__MjRmM price')
+        price_in_black_text = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--caption__NzU1O price')
+
+        if price_in_green_text:
+            price = price_in_green_text.get_text(strip=True).lstrip('$')
+        elif price_in_black_text and price_in_black_text.find('svg'):
+            # Dates which have no price yet set to 99999 initially
+            price = '99999'
+        else:
+            price = price_in_black_text.get_text(strip=True).lstrip('$')
+
+        prices[date] = price
+
+    return prices
 
 depart_month_div = soup.find('div', class_='outbound-calendar')
 return_month_div = soup.find('div', class_='inbound-calendar')
-depart_prices = {}
-return_prices = {}
 
-for button in depart_month_div.find_all('button', class_='month-view-calendar__cell'):
-    # Skip previous month dates. Eg. I looked up August, but the UI was also giving July 30 31 dates
-    if 'month-view-calendar__cell--blocked' in button.get('class', []):
-        continue
-
-    date = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--label-1__MWI4N date').get_text(strip=True)
-    price_in_green_text = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--label-3__MjRmM price')
-    price_in_black_text = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--caption__NzU1O price')
-
-    if price_in_green_text:
-        price = price_in_green_text.get_text(strip=True).lstrip('$')
-    elif price_in_black_text and price_in_black_text.find('svg'):
-        # Dates which have no price yet set to 99999 initially
-        price = '99999'
-    else:
-        price = price_in_black_text.get_text(strip=True).lstrip('$')
-
-    depart_prices[date] = price
-
-for button in return_month_div.find_all('button', class_='month-view-calendar__cell'):
-    if 'month-view-calendar__cell--blocked' in button.get('class', []):
-        continue
-
-    date = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--label-1__MWI4N date').get_text(strip=True)
-    price_in_green_text = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--label-3__MjRmM price')
-    price_in_black_text = button.find('p', class_='BpkText_bpk-text__ZjI3M BpkText_bpk-text--caption__NzU1O price')
-
-    if price_in_green_text:
-        price = price_in_green_text.get_text(strip=True).lstrip('$')
-    elif price_in_black_text and price_in_black_text.find('svg'):
-        price = '99999'
-    else:
-        price = price_in_black_text.get_text(strip=True).lstrip('$')
-
-    return_prices[date] = price
+depart_prices = extract_prices_from_calendar(depart_month_div)
+return_prices = extract_prices_from_calendar(return_month_div)
 
 print(depart_prices)
 print(return_prices)
