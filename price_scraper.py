@@ -11,17 +11,6 @@ dynamodb = boto3.resource('dynamodb')
 user_table = dynamodb.Table('Users')
 history_table = dynamodb.Table('History')
 record_prices = dynamodb.Table('Record_Prices')
-load_dotenv()
-skyscanner_url = os.getenv('url')
-email = os.getenv('email')
-firefox_options = Options()
-firefox_options.add_argument("--enable-javascript")
-firefox_options.add_argument("--headless")
-firefox_options.add_argument("--disable-blink-features=AutomationControlled")
-driver = webdriver.Firefox(options=firefox_options)
-driver.get(skyscanner_url)
-html_source = driver.page_source
-soup = BeautifulSoup(html_source, 'html.parser')
 
 def extract_prices_from_calendar(calendar_div):
     prices = {}
@@ -91,6 +80,17 @@ def insert_item_into_record_table(email, url, depart_prices, return_prices):
 
 def main():
     print(datetime.now())
+    load_dotenv()
+    skyscanner_url = os.getenv('url')
+    email = os.getenv('email')
+    firefox_options = Options()
+    firefox_options.add_argument("--enable-javascript")
+    firefox_options.add_argument("--headless")
+    firefox_options.add_argument("--disable-blink-features=AutomationControlled")
+    driver = webdriver.Firefox(options=firefox_options)
+    driver.get(skyscanner_url)
+    html_source = driver.page_source
+    soup = BeautifulSoup(html_source, 'html.parser')
 
     depart_month_div = soup.find('div', class_='outbound-calendar')
     return_month_div = soup.find('div', class_='inbound-calendar')

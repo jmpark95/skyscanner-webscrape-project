@@ -7,21 +7,35 @@ record_prices_table = dynamodb.Table('Record_Prices')
 def ddb_deserialize(r, type_deserializer = TypeDeserializer()):
     return type_deserializer.deserialize({"M": r})
 
-def update_record_table_if_record_broken(user_id, record_prices, todays_snapshot_prices, date_scraped, depart_or_return):
-    broken_prices = {}
+def update_record_table_if_record_broken(user_id, record_depart_prices, record_return_prices, todays_snapshot_depart_prices, todays_snapshot_return_prices, date_scraped):
+    broken_depart_prices = {}
+    broken_return_prices = {}
 
-    for day in record_prices:
-        if ( int(todays_snapshot_prices[day]) < int(record_prices[day]) ):
-            broken_prices[day] = todays_snapshot_prices[day]
+    for day in record_depart_prices:
+        if int(todays_snapshot_depart_prices[day]) < int(record_depart_prices[day]):
+            broken_depart_prices[day] = todays_snapshot_depart_prices[day]
         else:
-            broken_prices[day] = record_prices[day]
+            broken_depart_prices[day] = record_depart_prices[day]
 
-    if broken_prices != record_prices:
+    for day in record_return_prices:
+        if int(todays_snapshot_return_prices[day]) < int(record_return_prices[day]):
+            broken_return_prices[day] = todays_snapshot_return_prices[day]
+        else:
+            broken_return_prices[day] = record_return_prices[day]
+
+    # Only update if either depart or return prices changed
+    if (broken_depart_prices != record_depart_prices or broken_return_prices != record_return_prices):
         record_prices_table.update_item(
             Key={'user_id': user_id},
-            UpdateExpression=f"SET prices.{depart_or_return}_prices = :p, date_scraped = :ds",
+            UpdateExpression="""
+                SET
+                    prices.depart_prices = :depart_prices,
+                    prices.return_prices = :return_prices,
+                    date_scraped = :ds
+            """,
             ExpressionAttributeValues={
-                ':p': broken_prices,
+                ':depart_prices': broken_depart_prices,
+                ':return_prices': broken_return_prices,
                 ':ds': date_scraped
             },
             ReturnValues="UPDATED_NEW"
@@ -43,8 +57,7 @@ def lambda_handler(event, context):
             record_depart_prices = record_prices_to_date['Item']['prices']['depart_prices']
             record_return_prices = record_prices_to_date['Item']['prices']['return_prices']
 
-            update_record_table_if_record_broken(user_id, record_depart_prices, todays_snapshot_depart_prices, date_scraped, 'depart')
-            update_record_table_if_record_broken(user_id, record_return_prices, todays_snapshot_return_prices, date_scraped, 'return')
+            update_record_table_if_record_broken(user_id, record_depart_prices, record_return_prices, todays_snapshot_depart_prices, todays_snapshot_return_prices, date_scraped)
 
         return {
             'statusCode': 200
